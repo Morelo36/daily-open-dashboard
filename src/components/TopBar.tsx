@@ -45,21 +45,17 @@ export default function TopBar({ coins, onRemoveCoin, onRefresh, lastUpdated, da
     >
       {/* Left: branding */}
       <div className="flex items-center gap-3 shrink-0">
-        <div className="flex flex-col">
-          <span className="font-sans font-semibold text-[13px] tracking-tight" style={{ color: 'var(--color-text-primary)' }}>
-            Daily Open Dashboard
+        <img src="/neo-logo.png" alt="NEO" className="h-8 w-auto object-contain" />
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+            Updated {updatedAgo}
           </span>
-          <div className="flex items-center gap-1.5">
-            <span className="font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-              Updated {updatedAgo}
-            </span>
-            {dataStatus === 'live' && (
-              <span
-                className="w-1.5 h-1.5 rounded-full"
-                style={{ backgroundColor: 'var(--color-bullish)', boxShadow: '0 0 4px var(--color-bullish)' }}
-              />
-            )}
-          </div>
+          {dataStatus === 'live' && (
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ backgroundColor: 'var(--color-bullish)', boxShadow: '0 0 4px var(--color-bullish)' }}
+            />
+          )}
         </div>
 
         <div style={{ width: '1px', height: '28px', backgroundColor: 'var(--color-surface-border)' }} />
