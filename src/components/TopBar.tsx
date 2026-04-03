@@ -4,7 +4,7 @@ import type { CoinSnapshot } from '../types/dashboard';
 
 interface TopBarProps {
   coins: CoinSnapshot[];
-  onAddCoin: (symbol: string) => void;
+  onAddCoin: (symbol: string) => Promise<'ok' | string>;
   onRemoveCoin: (symbol: string) => void;
   onRefresh: () => void;
   lastUpdated: string;
@@ -14,12 +14,14 @@ interface TopBarProps {
 const MODES = ['Intraday', 'Swing', 'Daily'] as const;
 const PRESETS = ['My Watchlist', 'BTC Focus', 'Alt Season'] as const;
 
-export default function TopBar({ coins, onRemoveCoin, onRefresh, lastUpdated, dataStatus }: TopBarProps) {
+export default function TopBar({ coins, onAddCoin, onRemoveCoin, onRefresh, lastUpdated, dataStatus }: TopBarProps) {
   const [now, setNow] = useState(new Date());
   const [mode, setMode] = useState<typeof MODES[number]>('Intraday');
   const [preset, setPreset] = useState<typeof PRESETS[number]>('My Watchlist');
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [addInput, setAddInput] = useState('');
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -111,30 +113,52 @@ export default function TopBar({ coins, onRemoveCoin, onRefresh, lastUpdated, da
             </button>
             {showAddPanel && (
               <div
-                className="absolute right-0 top-full mt-1 p-2 rounded-sm z-10 flex gap-1"
+                className="absolute right-0 top-full mt-1 p-2 rounded-sm z-10 flex flex-col gap-1"
                 style={{
                   backgroundColor: 'var(--color-surface-overlay)',
                   border: '1px solid var(--color-surface-border)',
-                  minWidth: '180px',
+                  minWidth: '200px',
                 }}
               >
-                <input
-                  value={addInput}
-                  onChange={(e) => setAddInput(e.target.value.toUpperCase())}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && addInput.trim()) {
-                      setShowAddPanel(false);
-                      setAddInput('');
-                    }
-                  }}
-                  placeholder="e.g. DOGE"
-                  className="flex-1 px-2 py-1 rounded-sm text-[11px] outline-none"
-                  style={{
-                    backgroundColor: 'var(--color-surface-border)',
-                    color: 'var(--color-text-primary)',
-                  }}
-                  autoFocus
-                />
+                <div className="flex gap-1">
+                  <input
+                    value={addInput}
+                    onChange={(e) => { setAddInput(e.target.value.toUpperCase()); setAddError(null); }}
+                    onKeyDown={async (e) => {
+                      if (e.key === 'Enter' && addInput.trim() && !addLoading) {
+                        setAddLoading(true);
+                        setAddError(null);
+                        const result = await onAddCoin(addInput.trim());
+                        setAddLoading(false);
+                        if (result === 'ok') {
+                          setShowAddPanel(false);
+                          setAddInput('');
+                        } else {
+                          setAddError(result ?? 'Not found on Bybit');
+                        }
+                      }
+                      if (e.key === 'Escape') { setShowAddPanel(false); setAddInput(''); setAddError(null); }
+                    }}
+                    placeholder="e.g. DOGE"
+                    className="flex-1 px-2 py-1 rounded-sm text-[11px] outline-none"
+                    style={{
+                      backgroundColor: 'var(--color-surface-border)',
+                      color: 'var(--color-text-primary)',
+                      opacity: addLoading ? 0.5 : 1,
+                    }}
+                    disabled={addLoading}
+                    autoFocus
+                  />
+                  {addLoading && (
+                    <span className="text-[10px] self-center" style={{ color: 'var(--color-text-muted)' }}>…</span>
+                  )}
+                </div>
+                {addError && (
+                  <span className="text-[10px]" style={{ color: 'var(--color-bearish)' }}>{addError}</span>
+                )}
+                <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                  Type symbol + Enter — perpetual only
+                </span>
               </div>
             )}
           </div>

@@ -1,6 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+const LS_ADDED = 'dod_added_symbols';
+const LS_REMOVED = 'dod_removed_symbols';
+
+function loadAdded(): string[] {
+  try { return JSON.parse(localStorage.getItem(LS_ADDED) ?? '[]'); } catch { return []; }
+}
+function loadRemoved(): string[] {
+  try { return JSON.parse(localStorage.getItem(LS_REMOVED) ?? '[]'); } catch { return []; }
+}
+function saveAdded(symbols: string[]) {
+  localStorage.setItem(LS_ADDED, JSON.stringify(symbols));
+}
+function saveRemoved(symbols: string[]) {
+  localStorage.setItem(LS_REMOVED, JSON.stringify(symbols));
+}
 import './index.css';
 import { useMarketData } from './hooks/useMarketData';
+import { fetchLiveTicker } from './lib/api';
 import TopBar from './components/TopBar';
 import GlobalSnapshotRow from './components/GlobalSnapshotRow';
 import SummaryCardsRow from './components/SummaryCardsRow';
@@ -10,15 +27,90 @@ import TradeReadinessCard from './components/TradeReadinessCard';
 import KeyLevelsCard from './components/KeyLevelsCard';
 import VolumeDerivativesCard from './components/VolumeDerivativesCard';
 import DailyNarrativePanel from './components/DailyNarrativePanel';
-import type { CoinSnapshot } from './types/dashboard';
+import type { CoinSnapshot, CoinDeepDive } from './types/dashboard';
+import type { LiveTickerData } from './lib/api';
+
+function tickerToCoinSnapshot(t: LiveTickerData): CoinSnapshot {
+  return {
+    symbol: t.symbol,
+    name: t.symbol,
+    priceUsd: t.priceUsd,
+    change24hPct: t.change24hPct,
+    bias: 'NEUTRAL',
+    volume24hUsd: t.volume24hUsd,
+    volumeVsAvgPct: 100,
+    structure: 'RANGING',
+    nearestKeyLevel: { price: t.priceUsd, label: 'No TA data', type: 'PIVOT', proximityPct: 0 },
+    tradeReadiness: { total: 5, momentum: 5, structure: 5, volume: 5, riskReward: 5, status: 'WATCH' },
+    status: 'WATCH',
+  };
+}
+
+function tickerToDeepDive(t: LiveTickerData): CoinDeepDive {
+  return {
+    symbol: t.symbol,
+    name: t.symbol,
+    priceUsd: t.priceUsd,
+    change24hPct: t.change24hPct,
+    bias: 'NEUTRAL',
+    oneLinerThesis: 'Live price data only — no TA analysis available for manually added coins.',
+    tradeReadiness: { total: 5, momentum: 5, structure: 5, volume: 5, riskReward: 5, status: 'WATCH' },
+    keyLevels: [
+      { price: t.priceUsd, label: 'Current Price', type: 'PIVOT', proximityPct: 0 },
+    ],
+    derivatives: {
+      fundingRatePct: t.fundingRatePct,
+      fundingRateSentiment: t.fundingRatePct > 0.005 ? 'ELEVATED_LONG' : t.fundingRatePct < -0.005 ? 'ELEVATED_SHORT' : 'NEUTRAL',
+      openInterestUsd: t.openInterestUsd,
+      openInterestChange24hPct: 0,
+      longShortRatio: t.longShortRatio,
+      estimatedLiquidationUp: t.priceUsd * 1.1,
+      estimatedLiquidationDown: t.priceUsd * 0.9,
+      cumulativeVolumeDelta24h: 0,
+    },
+    contextNotes: [
+      'Manually added coin — only live Bybit perpetual data shown.',
+      'Bias, structure, and key levels require manual TA input.',
+    ],
+  };
+}
 
 export default function App() {
   const { data, status, refresh, lastUpdated } = useMarketData();
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>('SOL');
-  const [removedSymbols, setRemovedSymbols] = useState<Set<string>>(new Set());
+  const [removedSymbols, setRemovedSymbols] = useState<Set<string>>(
+    () => new Set(loadRemoved())
+  );
+  const [addedCoins, setAddedCoins] = useState<CoinSnapshot[]>([]);
+  const [addedDeepDives, setAddedDeepDives] = useState<Record<string, CoinDeepDive>>({});
 
-  const coins: CoinSnapshot[] = data.coins.filter((c) => !removedSymbols.has(c.symbol));
-  const deepDive = selectedSymbol ? data.deepDives[selectedSymbol] ?? null : null;
+  // On mount: re-fetch any previously added coins from localStorage
+  useEffect(() => {
+    const symbols = loadAdded();
+    if (!symbols.length) return;
+    Promise.all(symbols.map((s) => fetchLiveTicker(s))).then((results) => {
+      const coins: CoinSnapshot[] = [];
+      const dives: Record<string, CoinDeepDive> = {};
+      results.forEach((t) => {
+        if (!t) return;
+        coins.push(tickerToCoinSnapshot(t));
+        dives[t.symbol] = tickerToDeepDive(t);
+      });
+      setAddedCoins(coins);
+      setAddedDeepDives(dives);
+    });
+  }, []);
+
+  // Persist to localStorage on every change
+  useEffect(() => { saveAdded(addedCoins.map((c) => c.symbol)); }, [addedCoins]);
+  useEffect(() => { saveRemoved([...removedSymbols]); }, [removedSymbols]);
+
+  const allCoins: CoinSnapshot[] = [...data.coins, ...addedCoins].filter(
+    (c) => !removedSymbols.has(c.symbol)
+  );
+  const deepDive = selectedSymbol
+    ? (data.deepDives[selectedSymbol] ?? addedDeepDives[selectedSymbol] ?? null)
+    : null;
 
   function handleSelectCoin(symbol: string) {
     setSelectedSymbol((prev) => (prev === symbol ? null : symbol));
@@ -26,7 +118,19 @@ export default function App() {
 
   function handleRemoveCoin(symbol: string) {
     setRemovedSymbols((prev) => new Set([...prev, symbol]));
+    setAddedCoins((prev) => prev.filter((c) => c.symbol !== symbol));
+    setAddedDeepDives((prev) => { const n = { ...prev }; delete n[symbol]; return n; });
     if (selectedSymbol === symbol) setSelectedSymbol(null);
+  }
+
+  async function handleAddCoin(raw: string): Promise<'ok' | string> {
+    const symbol = raw.toUpperCase().trim();
+    if (allCoins.some((c) => c.symbol === symbol)) return 'Already in watchlist';
+    const ticker = await fetchLiveTicker(symbol);
+    if (!ticker) return `${symbol}USDT not found on Bybit perpetuals`;
+    setAddedCoins((prev) => [...prev, tickerToCoinSnapshot(ticker)]);
+    setAddedDeepDives((prev) => ({ ...prev, [symbol]: tickerToDeepDive(ticker) }));
+    return 'ok';
   }
 
   return (
@@ -39,8 +143,8 @@ export default function App() {
       }}
     >
       <TopBar
-        coins={coins}
-        onAddCoin={() => {}}
+        coins={allCoins}
+        onAddCoin={handleAddCoin}
         onRemoveCoin={handleRemoveCoin}
         onRefresh={refresh}
         lastUpdated={lastUpdated?.toISOString() ?? data.global.lastUpdated}
@@ -62,12 +166,12 @@ export default function App() {
                 className="text-[10px] uppercase tracking-widest font-sans"
                 style={{ color: 'var(--color-text-muted)' }}
               >
-                Watchlist — {coins.length} coins
+                Watchlist — {allCoins.length} coins
               </span>
               <StatusPill status={status} />
             </div>
             <SelectedCoinsTable
-              coins={coins}
+              coins={allCoins}
               selectedSymbol={selectedSymbol}
               onSelectCoin={handleSelectCoin}
             />
