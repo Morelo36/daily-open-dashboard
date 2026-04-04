@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 const LS_ADDED = 'dod_added_symbols';
 const LS_REMOVED = 'dod_removed_symbols';
@@ -22,10 +22,7 @@ import TopBar from './components/TopBar';
 import GlobalSnapshotRow from './components/GlobalSnapshotRow';
 import SummaryCardsRow from './components/SummaryCardsRow';
 import SelectedCoinsTable from './components/SelectedCoinsTable';
-import CoinSummaryPanel from './components/CoinSummaryPanel';
-import TradeReadinessCard from './components/TradeReadinessCard';
-import KeyLevelsCard from './components/KeyLevelsCard';
-import VolumeDerivativesCard from './components/VolumeDerivativesCard';
+import LiveAlertsTable from './components/LiveAlertsTable';
 import DailyNarrativePanel from './components/DailyNarrativePanel';
 import type { CoinSnapshot, CoinDeepDive } from './types/dashboard';
 import type { LiveTickerData } from './lib/api';
@@ -75,14 +72,53 @@ function tickerToDeepDive(t: LiveTickerData): CoinDeepDive {
   };
 }
 
+// ── Live prices for alert % Move column ──────────────────────────────────────
+// Fetches Bybit tickers for alert symbols every 30s via the public REST API.
+function useLiveAlertPrices(symbols: string[]): Record<string, number> {
+  const [prices, setPrices] = useState<Record<string, number>>({});
+  const prevSymbols = useRef<string>('');
+
+  const fetchPrices = useCallback(async (syms: string[]) => {
+    if (!syms.length) return;
+    // Batch: Bybit linear tickers endpoint returns all at once
+    try {
+      const res = await fetch('https://api.bybit.com/v5/market/tickers?category=linear');
+      const json = await res.json();
+      const list: { symbol: string; lastPrice: string }[] = json?.result?.list ?? [];
+      const symSet = new Set(syms);
+      const map: Record<string, number> = {};
+      for (const item of list) {
+        if (symSet.has(item.symbol)) {
+          map[item.symbol] = parseFloat(item.lastPrice);
+        }
+      }
+      setPrices(prev => ({ ...prev, ...map }));
+    } catch { /* silently ignore */ }
+  }, []);
+
+  useEffect(() => {
+    const key = symbols.slice().sort().join(',');
+    if (key === prevSymbols.current) return;
+    prevSymbols.current = key;
+    fetchPrices(symbols);
+    const id = setInterval(() => fetchPrices(symbols), 30_000);
+    return () => clearInterval(id);
+  }, [symbols, fetchPrices]);
+
+  return prices;
+}
+
 export default function App() {
   const { data, status, refresh, lastUpdated } = useMarketData();
-  const [selectedSymbol, setSelectedSymbol] = useState<string | null>('SOL');
   const [removedSymbols, setRemovedSymbols] = useState<Set<string>>(
     () => new Set(loadRemoved())
   );
   const [addedCoins, setAddedCoins] = useState<CoinSnapshot[]>([]);
   const [addedDeepDives, setAddedDeepDives] = useState<Record<string, CoinDeepDive>>({});
+
+  // Track unique alert symbols so we can fetch live prices for % Move
+  const [alertSymbols, setAlertSymbols] = useState<string[]>([]);
+  const livePrices = useLiveAlertPrices(alertSymbols);
 
   // On mount: re-fetch any previously added coins from localStorage
   useEffect(() => {
@@ -108,19 +144,11 @@ export default function App() {
   const allCoins: CoinSnapshot[] = [...data.coins, ...addedCoins].filter(
     (c) => !removedSymbols.has(c.symbol)
   );
-  const deepDive = selectedSymbol
-    ? (data.deepDives[selectedSymbol] ?? addedDeepDives[selectedSymbol] ?? null)
-    : null;
-
-  function handleSelectCoin(symbol: string) {
-    setSelectedSymbol((prev) => (prev === symbol ? null : symbol));
-  }
 
   function handleRemoveCoin(symbol: string) {
     setRemovedSymbols((prev) => new Set([...prev, symbol]));
     setAddedCoins((prev) => prev.filter((c) => c.symbol !== symbol));
     setAddedDeepDives((prev) => { const n = { ...prev }; delete n[symbol]; return n; });
-    if (selectedSymbol === symbol) setSelectedSymbol(null);
   }
 
   async function handleAddCoin(raw: string): Promise<'ok' | string> {
@@ -132,6 +160,9 @@ export default function App() {
     setAddedDeepDives((prev) => ({ ...prev, [symbol]: tickerToDeepDive(ticker) }));
     return 'ok';
   }
+
+  // Suppress unused variable warning
+  void addedDeepDives;
 
   return (
     <div
@@ -158,48 +189,26 @@ export default function App() {
           <SummaryCardsRow data={data.summary} />
         </div>
 
-        {/* Two-column: Coin Table | Deep Dive */}
-        <div className="flex gap-4" style={{ minHeight: '360px' }}>
-          <div style={{ flex: '0 0 55%', minWidth: 0 }}>
-            <div className="mb-3 flex items-center justify-between">
-              <span
-                className="text-[10px] uppercase tracking-widest font-sans"
-                style={{ color: 'var(--color-text-muted)' }}
-              >
-                Watchlist — {allCoins.length} coins
-              </span>
-              <StatusPill status={status} />
-            </div>
-            <SelectedCoinsTable
-              coins={allCoins}
-              selectedSymbol={selectedSymbol}
-              onSelectCoin={handleSelectCoin}
+        {/* Operational section: Live Alerts (left) + Watchlist (right) */}
+        <div className="flex gap-4" style={{ alignItems: 'flex-start' }}>
+
+          {/* Live Alerts Table — dominant */}
+          <div style={{ flex: '1 1 0', minWidth: 0 }}>
+            <AlertsSectionHeader />
+            <LiveAlertsTable
+              livePrices={livePrices}
+              onSymbolsChange={setAlertSymbols}
             />
           </div>
 
-          <div style={{ flex: '1 1 45%', minWidth: 0 }}>
-            {deepDive ? (
-              <div className="flex flex-col gap-3">
-                <CoinSummaryPanel
-                  symbol={deepDive.symbol}
-                  name={deepDive.name}
-                  priceUsd={deepDive.priceUsd}
-                  change24hPct={deepDive.change24hPct}
-                  bias={deepDive.bias}
-                  oneLinerThesis={deepDive.oneLinerThesis}
-                />
-                <div className="grid gap-3" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                  <TradeReadinessCard score={deepDive.tradeReadiness} />
-                  <KeyLevelsCard levels={deepDive.keyLevels} currentPrice={deepDive.priceUsd} />
-                </div>
-                <VolumeDerivativesCard
-                  data={deepDive.derivatives}
-                  contextNotes={deepDive.contextNotes}
-                />
-              </div>
-            ) : (
-              <DeepDivePlaceholder />
-            )}
+          {/* Watchlist sidebar */}
+          <div style={{ flex: '0 0 280px', minWidth: '240px' }}>
+            <WatchlistHeader count={allCoins.length} status={status} />
+            <SelectedCoinsTable
+              coins={allCoins}
+              selectedSymbol={null}
+              onSelectCoin={() => {}}
+            />
           </div>
         </div>
 
@@ -210,58 +219,43 @@ export default function App() {
   );
 }
 
-function StatusPill({ status }: { status: string }) {
-  const configs: Record<string, { label: string; color: string; bg: string; dot: string }> = {
-    loading: {
-      label: 'Fetching…',
-      color: 'var(--color-text-muted)',
-      bg: 'var(--color-surface-overlay)',
-      dot: 'var(--color-warning)',
-    },
-    live: {
-      label: 'Live',
-      color: 'var(--color-bullish)',
-      bg: 'var(--color-bullish-dim)',
-      dot: 'var(--color-bullish)',
-    },
-    partial: {
-      label: 'Partial',
-      color: 'var(--color-warning)',
-      bg: 'var(--color-warning-dim)',
-      dot: 'var(--color-warning)',
-    },
-    error: {
-      label: 'Mock data',
-      color: 'var(--color-bearish)',
-      bg: 'var(--color-bearish-dim)',
-      dot: 'var(--color-bearish)',
-    },
-  };
-  const c = configs[status] ?? configs.loading;
-
+function AlertsSectionHeader() {
   return (
-    <div
-      className="flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-[10px]"
-      style={{ backgroundColor: c.bg, border: `1px solid ${c.dot}22` }}
-    >
+    <div className="mb-2 flex items-center gap-2">
       <span
-        className="w-1.5 h-1.5 rounded-full"
-        style={{ backgroundColor: c.dot, boxShadow: status === 'live' ? `0 0 4px ${c.dot}` : 'none' }}
-      />
-      <span style={{ color: c.color }}>{c.label}</span>
+        className="text-[10px] uppercase tracking-widest font-sans"
+        style={{ color: 'var(--color-text-muted)' }}
+      >
+        Scanner Alerts
+      </span>
     </div>
   );
 }
 
-function DeepDivePlaceholder() {
+function WatchlistHeader({ count, status }: { count: number; status: string }) {
+  const configs: Record<string, { label: string; color: string; bg: string; dot: string }> = {
+    loading: { label: 'Fetching…', color: 'var(--color-text-muted)', bg: 'var(--color-surface-overlay)', dot: 'var(--color-warning)' },
+    live:    { label: 'Live', color: 'var(--color-bullish)', bg: 'var(--color-bullish-dim)', dot: 'var(--color-bullish)' },
+    partial: { label: 'Partial', color: 'var(--color-warning)', bg: 'var(--color-warning-dim)', dot: 'var(--color-warning)' },
+    error:   { label: 'Mock', color: 'var(--color-bearish)', bg: 'var(--color-bearish-dim)', dot: 'var(--color-bearish)' },
+  };
+  const c = configs[status] ?? configs.loading;
+
   return (
-    <div
-      className="flex flex-col items-center justify-center h-full rounded-[6px]"
-      style={{ border: '1px dashed var(--color-surface-border)', minHeight: '200px' }}
-    >
-      <span className="font-sans text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
-        Select a coin from the table to view detailed analysis
+    <div className="mb-2 flex items-center justify-between">
+      <span
+        className="text-[10px] uppercase tracking-widest font-sans"
+        style={{ color: 'var(--color-text-muted)' }}
+      >
+        Watchlist — {count}
       </span>
+      <div
+        className="flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-[10px]"
+        style={{ backgroundColor: c.bg, border: `1px solid ${c.dot}22` }}
+      >
+        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: c.dot }} />
+        <span style={{ color: c.color }}>{c.label}</span>
+      </div>
     </div>
   );
 }

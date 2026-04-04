@@ -149,15 +149,28 @@ export default function TopBar({ coins, onAddCoin, onRemoveCoin, onRefresh, last
                     disabled={addLoading}
                     autoFocus
                   />
-                  {addLoading && (
-                    <span className="text-[10px] self-center" style={{ color: 'var(--color-text-muted)' }}>…</span>
-                  )}
+                  <button
+                    onClick={async () => {
+                      if (!addInput.trim() || addLoading) return;
+                      setAddLoading(true);
+                      setAddError(null);
+                      const result = await onAddCoin(addInput.trim());
+                      setAddLoading(false);
+                      if (result === 'ok') { setShowAddPanel(false); setAddInput(''); }
+                      else setAddError(result ?? 'Not found on Bybit');
+                    }}
+                    disabled={!addInput.trim() || addLoading}
+                    className="px-2 py-1 rounded-sm text-[11px] font-semibold transition-opacity disabled:opacity-40"
+                    style={{ backgroundColor: 'var(--color-accent)', color: '#fff' }}
+                  >
+                    {addLoading ? '…' : 'Add'}
+                  </button>
                 </div>
                 {addError && (
                   <span className="text-[10px]" style={{ color: 'var(--color-bearish)' }}>{addError}</span>
                 )}
                 <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-                  Type symbol + Enter — perpetual only
+                  Enter symbol then click Add or press Enter
                 </span>
               </div>
             )}
