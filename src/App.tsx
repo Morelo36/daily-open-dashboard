@@ -156,8 +156,11 @@ export default function App() {
     if (allCoins.some((c) => c.symbol === symbol)) return 'Already in watchlist';
     const ticker = await fetchLiveTicker(symbol);
     if (!ticker) return `${symbol}USDT not found on Bybit perpetuals`;
-    setAddedCoins((prev) => [...prev, tickerToCoinSnapshot(ticker)]);
-    setAddedDeepDives((prev) => ({ ...prev, [symbol]: tickerToDeepDive(ticker) }));
+    setRemovedSymbols((prev) => { const next = new Set(prev); next.delete(symbol); return next; });
+    if (!data.coins.some((c) => c.symbol === symbol)) {
+      setAddedCoins((prev) => [...prev, tickerToCoinSnapshot(ticker)]);
+      setAddedDeepDives((prev) => ({ ...prev, [symbol]: tickerToDeepDive(ticker) }));
+    }
     return 'ok';
   }
 
