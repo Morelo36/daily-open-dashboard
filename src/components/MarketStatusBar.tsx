@@ -209,14 +209,14 @@ export default function MarketStatusBar() {
 
   return (
     <div
-      className="flex items-center gap-0 overflow-x-auto px-5 py-2"
+      className="flex items-center gap-0 overflow-x-auto px-6 py-3"
       style={{
         backgroundColor: 'var(--color-surface-overlay)',
         borderBottom: '1px solid var(--color-surface-border)',
       }}
     >
       <span
-        className="text-[9px] uppercase tracking-widest mr-4 shrink-0"
+        className="text-[11px] uppercase tracking-widest mr-6 shrink-0"
         style={{ color: 'var(--color-text-muted)' }}
       >
         Markets
@@ -226,8 +226,7 @@ export default function MarketStatusBar() {
         <div key={market.name} className="flex items-center">
           {i > 0 && (
             <div
-              className="self-stretch mx-4"
-              style={{ width: '1px', backgroundColor: 'var(--color-surface-border)', margin: '2px 16px' }}
+              style={{ width: '1px', backgroundColor: 'var(--color-surface-border)', margin: '0 28px', height: '24px' }}
             />
           )}
           <MarketTile market={market} status={status} />
@@ -244,22 +243,22 @@ function MarketTile({ market, status }: { market: MarketConfig; status: MarketSt
   const bg = status.isOpen ? '#14532d' : '#450a0a';
 
   return (
-    <div className="flex items-center gap-2.5 shrink-0">
-      <span className="text-[14px] leading-none">{market.flag}</span>
+    <div className="flex items-center gap-4 shrink-0">
+      <span className="text-[28px] leading-none">{market.flag}</span>
       <span
-        className="font-mono text-[11px] font-semibold"
+        className="font-mono text-[20px] font-semibold"
         style={{ color: 'var(--color-text-primary)' }}
       >
         {market.name}
       </span>
       <span
-        className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider"
+        className="px-2.5 py-1 rounded text-[16px] font-bold uppercase tracking-wider"
         style={{ color, backgroundColor: bg }}
       >
         ● {status.label}
       </span>
       <span
-        className="font-mono text-[10px]"
+        className="font-mono text-[18px]"
         style={{ color: status.isOpen ? openColor : 'var(--color-text-secondary)' }}
       >
         {status.countdown}

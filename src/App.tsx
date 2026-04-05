@@ -121,13 +121,15 @@ export default function App() {
 
   // On mount: re-fetch any previously added coins from localStorage
   useEffect(() => {
-    const symbols = loadAdded();
+    const symbols = [...new Set(loadAdded())]; // deduplicate saved list
     if (!symbols.length) return;
     Promise.all(symbols.map((s) => fetchLiveTicker(s))).then((results) => {
       const coins: CoinSnapshot[] = [];
       const dives: Record<string, CoinDeepDive> = {};
+      const seen = new Set<string>();
       results.forEach((t) => {
-        if (!t) return;
+        if (!t || seen.has(t.symbol)) return;
+        seen.add(t.symbol);
         coins.push(tickerToCoinSnapshot(t));
         dives[t.symbol] = tickerToDeepDive(t);
       });
@@ -157,7 +159,9 @@ export default function App() {
     if (!ticker) return `${symbol}USDT not found on Bybit perpetuals`;
     setRemovedSymbols((prev) => { const next = new Set(prev); next.delete(symbol); return next; });
     if (!data.coins.some((c) => c.symbol === symbol)) {
-      setAddedCoins((prev) => [...prev, tickerToCoinSnapshot(ticker)]);
+      // Use functional updater so the duplicate check runs against the latest state,
+      // preventing a race condition where two adds slip through before re-render.
+      setAddedCoins((prev) => prev.some((c) => c.symbol === symbol) ? prev : [...prev, tickerToCoinSnapshot(ticker)]);
       setAddedDeepDives((prev) => ({ ...prev, [symbol]: tickerToDeepDive(ticker) }));
     }
     return 'ok';
