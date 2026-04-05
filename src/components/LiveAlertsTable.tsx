@@ -208,9 +208,9 @@ function SortableHeader({
   return (
     <th
       onClick={() => onSort(col)}
-      className="px-3 py-2 text-left text-[9px] font-semibold uppercase tracking-widest whitespace-nowrap cursor-pointer select-none group"
+      className="px-2 py-2 text-left text-[9px] font-semibold uppercase tracking-widest whitespace-nowrap cursor-pointer select-none group"
       style={{
-        color: active ? '#818CF8' : 'var(--color-text-secondary)',
+        color: active ? '#818CF8' : 'var(--color-text-muted)',
         backgroundColor: 'var(--color-surface-raised)',
       }}
     >
@@ -226,7 +226,7 @@ function SortableHeader({
 
 function PlainHeader({ label }: { label: string }) {
   return (
-    <th className="px-3 py-2 text-left text-[9px] font-semibold uppercase tracking-widest whitespace-nowrap"
+    <th className="px-2 py-2 text-left text-[9px] font-semibold uppercase tracking-widest whitespace-nowrap"
       style={{ color: 'var(--color-text-secondary)', backgroundColor: 'var(--color-surface-raised)' }}>
       {label}
     </th>
@@ -508,7 +508,7 @@ export default function LiveAlertsTable({ livePrices, onSymbolsChange }: Props) 
               : 'Connecting to scanner…'}
           </div>
         ) : (
-          <table className="w-full border-collapse" style={{ minWidth: '900px' }}>
+          <table className="w-full border-collapse" style={{ tableLayout: 'auto' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--color-surface-border)', position: 'sticky', top: 0, zIndex: 1 }}>
                 <PlainHeader label="" />
@@ -542,7 +542,7 @@ export default function LiveAlertsTable({ livePrices, onSymbolsChange }: Props) 
                     onMouseLeave={e => (e.currentTarget.style.backgroundColor = baseColor)}
                   >
                     {/* ★ Favorite */}
-                    <td className="px-2 py-2.5 w-7">
+                    <td className="px-1.5 py-2 w-6">
                       <button
                         onClick={() => toggleFavorite(alert.alert_id)}
                         className="transition-colors text-[14px] leading-none"
@@ -553,14 +553,14 @@ export default function LiveAlertsTable({ livePrices, onSymbolsChange }: Props) 
                     </td>
 
                     {/* Time */}
-                    <td className="px-3 py-2.5 whitespace-nowrap" title={fullTime(alert.ts)}>
+                    <td className="px-2 py-2 whitespace-nowrap" title={fullTime(alert.ts)}>
                       <span className="text-[11px] font-mono" style={{ color: 'var(--color-text-secondary)' }}>
                         {relativeTime(alert.ts)}
                       </span>
                     </td>
 
                     {/* Symbol — clickable TV link */}
-                    <td className="px-3 py-2.5">
+                    <td className="px-2 py-2">
                       <a
                         href={tvUrl(alert.symbol)}
                         target="_blank"
@@ -576,59 +576,59 @@ export default function LiveAlertsTable({ livePrices, onSymbolsChange }: Props) 
                     </td>
 
                     {/* Scanner */}
-                    <td className="px-3 py-2.5"><ScannerBadge scanner={alert.scanner} /></td>
+                    <td className="px-2 py-2"><ScannerBadge scanner={alert.scanner} /></td>
 
                     {/* Timeframe */}
-                    <td className="px-3 py-2.5">
+                    <td className="px-2 py-2">
                       <span className="text-[10px] font-mono" style={{ color: 'var(--color-text-secondary)' }}>
                         {alert.timeframe}
                       </span>
                     </td>
 
                     {/* Direction */}
-                    <td className="px-3 py-2.5"><DirectionBadge dir={alert.direction} /></td>
+                    <td className="px-2 py-2"><DirectionBadge dir={alert.direction} /></td>
 
                     {/* Alert price */}
-                    <td className="px-3 py-2.5 whitespace-nowrap">
+                    <td className="px-2 py-2 whitespace-nowrap">
                       <span className="font-mono text-[11px]" style={{ color: 'var(--color-text-primary)' }}>
                         {formatPrice(alert.alert_price)}
                       </span>
                     </td>
 
                     {/* % Move */}
-                    <td className="px-3 py-2.5 whitespace-nowrap">
+                    <td className="px-2 py-2 whitespace-nowrap">
                       <PctMoveCell alert={alert} livePrices={livePrices} />
                     </td>
 
                     {/* Tier */}
-                    <td className="px-3 py-2.5"><TierBadge tier={alert.tier} /></td>
+                    <td className="px-2 py-2"><TierBadge tier={alert.tier} /></td>
 
                     {/* Score */}
-                    <td className="px-3 py-2.5">
+                    <td className="px-2 py-2">
                       {alert.score != null
                         ? <span className="font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>{alert.score.toFixed(0)}</span>
                         : <span style={{ color: 'var(--color-text-secondary)' }} className="text-[10px]">—</span>}
                     </td>
 
                     {/* Tags */}
-                    <td className="px-3 py-2.5 max-w-[160px]"><Tags alert={alert} /></td>
+                    <td className="px-2 py-2 max-w-[140px]"><Tags alert={alert} /></td>
 
                     {/* 15m eval */}
-                    <td className="px-3 py-2.5">
+                    <td className="px-2 py-2">
                       {evalFor(alert, '15m')
                         ? <EvalBadge result={evalFor(alert, '15m')!.result} />
                         : <span className="text-[#242430] text-[10px]">—</span>}
                     </td>
 
                     {/* 1H eval */}
-                    <td className="px-3 py-2.5">
+                    <td className="px-2 py-2">
                       {evalFor(alert, '1H')
                         ? <EvalBadge result={evalFor(alert, '1H')!.result} />
                         : <span className="text-[#242430] text-[10px]">—</span>}
                     </td>
 
                     {/* Notes */}
-                    <td className="px-2 py-2 min-w-[100px]">
+                    <td className="px-1.5 py-2 min-w-[90px]">
                       <NoteCell alert={alert} onSave={saveNote} />
                     </td>
                   </tr>

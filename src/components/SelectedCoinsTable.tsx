@@ -21,8 +21,8 @@ export default function SelectedCoinsTable({ coins, selectedSymbol, onSelectCoin
       <div
         className="grid text-[10px] uppercase tracking-widest px-4 py-2.5"
         style={{
-          gridTemplateColumns: '1.4fr 1fr 0.7fr 0.7fr 0.85fr 1.1fr 1fr 0.9fr 0.7fr',
-          color: 'var(--color-text-muted)',
+          gridTemplateColumns: '1.2fr 1fr 0.7fr 0.6fr 1fr 1.1fr 1fr 0.9fr 0.65fr',
+          color: 'var(--color-text-secondary)',
           borderBottom: '1px solid var(--color-surface-border)',
         }}
       >
@@ -70,7 +70,7 @@ function CoinRow({
       onClick={onClick}
       className="grid items-center px-4 py-3 cursor-pointer transition-colors"
       style={{
-        gridTemplateColumns: '1.4fr 1fr 0.7fr 0.7fr 0.85fr 1.1fr 1fr 0.9fr 0.7fr',
+        gridTemplateColumns: '1.2fr 1fr 0.7fr 0.6fr 1fr 1.1fr 1fr 0.9fr 0.65fr',
         backgroundColor: isSelected ? 'var(--color-surface-hover)' : 'transparent',
         borderLeft: isSelected ? '2px solid var(--color-accent)' : '2px solid transparent',
         borderBottom: isLast ? 'none' : '1px solid var(--color-surface-border)',

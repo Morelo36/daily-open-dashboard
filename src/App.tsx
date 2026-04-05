@@ -20,10 +20,9 @@ import { useMarketData } from './hooks/useMarketData';
 import { fetchLiveTicker } from './lib/api';
 import TopBar from './components/TopBar';
 import GlobalSnapshotRow from './components/GlobalSnapshotRow';
-import SummaryCardsRow from './components/SummaryCardsRow';
+import MarketStatusBar from './components/MarketStatusBar';
 import SelectedCoinsTable from './components/SelectedCoinsTable';
 import LiveAlertsTable from './components/LiveAlertsTable';
-import DailyNarrativePanel from './components/DailyNarrativePanel';
 import type { CoinSnapshot, CoinDeepDive } from './types/dashboard';
 import type { LiveTickerData } from './lib/api';
 
@@ -186,12 +185,9 @@ export default function App() {
       />
 
       <GlobalSnapshotRow data={data.global} />
+      <MarketStatusBar />
 
       <div className="flex-1 px-6 py-4 flex flex-col gap-4" style={{ minWidth: 0 }}>
-        <div style={{ margin: '0 -24px', padding: '0 24px' }}>
-          <SummaryCardsRow data={data.summary} />
-        </div>
-
         {/* Operational section: Live Alerts (left) + Watchlist (right) */}
         <div className="flex gap-4" style={{ alignItems: 'flex-start' }}>
 
@@ -205,7 +201,7 @@ export default function App() {
           </div>
 
           {/* Watchlist sidebar */}
-          <div style={{ flex: '0 0 280px', minWidth: '240px' }}>
+          <div style={{ flex: '0 0 400px', minWidth: '300px' }}>
             <WatchlistHeader count={allCoins.length} status={status} />
             <SelectedCoinsTable
               coins={allCoins}
@@ -215,7 +211,6 @@ export default function App() {
           </div>
         </div>
 
-        <DailyNarrativePanel data={data.narrative} />
         <div style={{ height: '16px' }} />
       </div>
     </div>
