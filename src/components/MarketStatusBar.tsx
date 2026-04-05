@@ -144,16 +144,7 @@ function getMarketStatus(market: MarketConfig, now: Date): MarketStatus {
   const diffMs = nextOpen.getTime() - now.getTime();
   const diffH = diffMs / 3600000;
 
-  if (diffH < 24) {
-    return { isOpen: false, label: 'CLOSED', countdown: `opens in ${formatDuration(diffMs)}` };
-  }
-
-  // More than 24h away — show day name
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const dayName = dayNames[nextOpen.getUTCDay()];
-  const hh = String(nextOpen.getUTCHours()).padStart(2, '0');
-  const mm = String(nextOpen.getUTCMinutes()).padStart(2, '0');
-  return { isOpen: false, label: 'CLOSED', countdown: `opens ${dayName} ${hh}:${mm} UTC` };
+  return { isOpen: false, label: 'CLOSED', countdown: `opens in ${formatDuration(diffMs)}` };
 }
 
 function findNextOpen(market: MarketConfig, from: Date): Date {
