@@ -183,38 +183,12 @@ function EventRow({ ev }: { ev: EconEvent }) {
   );
 }
 
-function SectionLabel({ label, count }: { label: string; count: number }) {
-  return (
-    <div
-      className="flex items-center justify-between px-4 py-[6px]"
-      style={{
-        backgroundColor: 'var(--color-surface-overlay)',
-        borderBottom: '1px solid var(--color-surface-border)',
-      }}
-    >
-      <span
-        className="text-[9px] uppercase tracking-widest font-sans"
-        style={{ color: 'var(--color-text-muted)' }}
-      >
-        {label}
-      </span>
-      <span
-        className="text-[9px] font-mono"
-        style={{ color: 'var(--color-text-muted)' }}
-      >
-        {count}
-      </span>
-    </div>
-  );
-}
-
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function CriticalEventsPanel() {
   const { events, loading, error } = useEvents();
 
-  const today    = events.filter(e => e.is_today);
-  const upcoming = events.filter(e => !e.is_today);
+  const today = events.filter(e => e.is_today);
 
   return (
     <div
@@ -276,27 +250,17 @@ export default function CriticalEventsPanel() {
           </div>
         )}
 
-        {!loading && !error && events.length === 0 && (
+        {!loading && !error && today.length === 0 && (
           <div
             className="px-4 py-6 text-center text-[11px]"
             style={{ color: 'var(--color-text-muted)' }}
           >
-            No high-impact USD events this week
+            No high-impact USD events today
           </div>
         )}
 
         {!loading && !error && today.length > 0 && (
-          <>
-            <SectionLabel label="Today" count={today.length} />
-            {today.map((ev, i) => <EventRow key={i} ev={ev} />)}
-          </>
-        )}
-
-        {!loading && !error && upcoming.length > 0 && (
-          <>
-            <SectionLabel label="This Week" count={upcoming.length} />
-            {upcoming.map((ev, i) => <EventRow key={i} ev={ev} />)}
-          </>
+          today.map((ev, i) => <EventRow key={i} ev={ev} />)
         )}
       </div>
     </div>
