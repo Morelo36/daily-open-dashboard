@@ -68,8 +68,9 @@ function ScannerBadge({ scanner }: { scanner: string }) {
     SHORTS: 'bg-[#2d1a1a] text-[#EF4444] border-[#5a2020]',
     VOLUME: 'bg-[#1a2030] text-[#3B82F6] border-[#1e3a5f]',
     SWEEP:  'bg-[#1a2a1a] text-[#22C55E] border-[#1a4a1a]',
+    HL:     'bg-[#2a2010] text-[#F59E0B] border-[#5a4010]',
   };
-  const labels: Record<string, string> = { SHORTS: 'SHORT', VOLUME: 'VOL', SWEEP: 'SWEEP' };
+  const labels: Record<string, string> = { SHORTS: 'SHORT', VOLUME: 'VOL', SWEEP: 'SWEEP', HL: 'H.LOW' };
   return (
     <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border ${styles[scanner] ?? 'bg-[#1a1a2a] text-[#9090A0] border-[#242430]'}`}>
       {labels[scanner] ?? scanner}
@@ -268,6 +269,7 @@ const SCANNER_TABS: { key: AlertFilter; label: string }[] = [
   { key: 'SHORTS',    label: 'Shorts' },
   { key: 'VOLUME',    label: 'Volume' },
   { key: 'SWEEP',     label: 'Sweep' },
+  { key: 'HL',        label: 'H.Low' },
   { key: 'FAVORITES', label: '★ Fav' },
 ];
 

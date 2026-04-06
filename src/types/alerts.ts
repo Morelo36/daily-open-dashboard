@@ -1,4 +1,4 @@
-export type ScannerType = 'SHORTS' | 'VOLUME' | 'SWEEP';
+export type ScannerType = 'SHORTS' | 'VOLUME' | 'SWEEP' | 'HL';
 export type Direction = 'LONG' | 'SHORT' | 'NEUTRAL';
 export type EvalResult = 'strong_win' | 'weak_win' | 'neutral' | 'loss' | 'pending';
 
