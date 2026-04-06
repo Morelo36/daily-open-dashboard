@@ -23,7 +23,6 @@ import GlobalSnapshotRow from './components/GlobalSnapshotRow';
 import MarketStatusBar from './components/MarketStatusBar';
 import SelectedCoinsTable from './components/SelectedCoinsTable';
 import LiveAlertsTable from './components/LiveAlertsTable';
-import CriticalEventsPanel from './components/CriticalEventsPanel';
 import type { CoinSnapshot, CoinDeepDive } from './types/dashboard';
 import type { LiveTickerData } from './lib/api';
 
@@ -205,17 +204,14 @@ export default function App() {
             />
           </div>
 
-          {/* Watchlist + Critical Events sidebar */}
-          <div style={{ flex: '0 0 400px', minWidth: '300px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <WatchlistHeader count={allCoins.length} status={status} />
-              <SelectedCoinsTable
-                coins={allCoins}
-                selectedSymbol={null}
-                onSelectCoin={() => {}}
-              />
-            </div>
-            <CriticalEventsPanel />
+          {/* Watchlist sidebar */}
+          <div style={{ flex: '0 0 400px', minWidth: '300px' }}>
+            <WatchlistHeader count={allCoins.length} status={status} />
+            <SelectedCoinsTable
+              coins={allCoins}
+              selectedSymbol={null}
+              onSelectCoin={() => {}}
+            />
           </div>
         </div>
 

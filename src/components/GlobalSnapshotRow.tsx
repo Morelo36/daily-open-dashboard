@@ -1,5 +1,6 @@
-import { TrendingUp, TrendingDown, Minus, AlertTriangle, Activity } from 'lucide-react';
-import type { GlobalMarketSnapshot, EventRiskLevel } from '../types/dashboard';
+import { TrendingUp, TrendingDown, Minus, Calendar } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import type { GlobalMarketSnapshot } from '../types/dashboard';
 import { formatPrice, formatPct, formatLargeNumber } from '../lib/formatters';
 
 interface GlobalSnapshotRowProps {
@@ -47,7 +48,7 @@ export default function GlobalSnapshotRow({ data }: GlobalSnapshotRowProps) {
       <Divider />
       <FearGreedGauge value={data.fearAndGreedIndex.value} label={data.fearAndGreedIndex.label} />
       <Divider />
-      <EventRiskPill level={data.eventRisk.level} description={data.eventRisk.description} />
+      <InlineEventsStrip />
     </div>
   );
 }
@@ -237,39 +238,113 @@ function FearGreedGauge({ value, label: _label }: { value: number; label: string
   );
 }
 
-function eventRiskColor(level: EventRiskLevel): string {
-  switch (level) {
-    case 'HIGH': return 'var(--color-bearish)';
-    case 'MEDIUM': return 'var(--color-warning)';
-    case 'LOW': return 'var(--color-bullish)';
-    default: return 'var(--color-text-muted)';
-  }
+// ── Inline Events Strip ───────────────────────────────────────────────────────
+
+interface EconEvent {
+  title: string;
+  time_il: string;
+  is_today: boolean;
+  forecast: string;
+  previous: string;
+  actual: string;
 }
 
-function EventRiskPill({ level, description }: { level: EventRiskLevel; description: string }) {
-  const color = eventRiskColor(level);
-  const Icon = level === 'HIGH' ? AlertTriangle : Activity;
+function isSoon(ev: EconEvent): boolean {
+  const now = new Date();
+  const ilHour = (now.getUTCHours() + 3) % 24;
+  const ilMin  = now.getUTCMinutes();
+  const [evH, evM] = ev.time_il.split(':').map(Number);
+  const diff = (evH * 60 + evM) - (ilHour * 60 + ilMin);
+  return diff >= 0 && diff <= 90;
+}
+
+function isPast(ev: EconEvent): boolean {
+  const now = new Date();
+  const ilHour = (now.getUTCHours() + 3) % 24;
+  const ilMin  = now.getUTCMinutes();
+  const [evH, evM] = ev.time_il.split(':').map(Number);
+  return ilHour > evH || (ilHour === evH && ilMin >= evM);
+}
+
+function InlineEventsStrip() {
+  const [events, setEvents] = useState<EconEvent[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const r = await fetch('/api/events');
+        const data: EconEvent[] = await r.json();
+        setEvents(data.filter(e => e.is_today));
+      } catch { /* silent */ }
+    };
+    load();
+    const id = setInterval(load, 30 * 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
-    <div className="flex flex-col justify-center px-5 py-2.5 gap-0.5 shrink-0 flex-1">
-      <span
-        className="text-[10px] uppercase tracking-widest font-sans"
-        style={{ color: 'var(--color-text-muted)' }}
-      >
-        Event Risk Today
-      </span>
+    <div className="flex flex-col justify-center px-5 py-2.5 gap-1 flex-1 min-w-0">
       <div className="flex items-center gap-1.5">
-        <Icon size={12} style={{ color }} strokeWidth={2} />
+        <Calendar size={10} style={{ color: 'var(--color-text-muted)' }} />
         <span
-          className="font-mono text-[12px] font-semibold uppercase tracking-wide"
-          style={{ color }}
+          className="text-[10px] uppercase tracking-widest font-sans"
+          style={{ color: 'var(--color-text-muted)' }}
         >
-          {level}
+          Critical Events Today
         </span>
       </div>
-      <span className="font-sans text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-        {description}
-      </span>
+
+      {events.length === 0 ? (
+        <span className="font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+          No high-impact events
+        </span>
+      ) : (
+        <div className="flex flex-wrap gap-x-4 gap-y-0.5">
+          {events.map((ev, i) => {
+            const soon = isSoon(ev);
+            const past = isPast(ev);
+            const color = past
+              ? 'var(--color-text-muted)'
+              : soon
+              ? 'var(--color-warning)'
+              : 'var(--color-text-secondary)';
+
+            return (
+              <div
+                key={i}
+                className="flex items-baseline gap-1"
+                style={{ opacity: past && !ev.actual ? 0.45 : 1 }}
+              >
+                <span className="font-mono text-[11px]" style={{ color }}>
+                  {ev.time_il}
+                </span>
+                <span className="font-sans text-[11px]" style={{ color }}>
+                  {ev.title}
+                </span>
+                {ev.actual && (
+                  <span
+                    className="font-mono text-[10px] font-semibold"
+                    style={{ color: 'var(--color-bullish)' }}
+                  >
+                    {ev.actual}
+                  </span>
+                )}
+                {soon && !ev.actual && (
+                  <span
+                    className="font-mono text-[9px] px-1 rounded-sm"
+                    style={{
+                      backgroundColor: 'rgba(245,158,11,0.15)',
+                      color: 'var(--color-warning)',
+                    }}
+                  >
+                    SOON
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
