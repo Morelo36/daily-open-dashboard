@@ -295,7 +295,7 @@ function InlineEventsStrip() {
       </div>
 
       {events.length === 0 ? (
-        <span className="font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+        <span className="font-mono text-[22px]" style={{ color: 'var(--color-text-muted)' }}>
           No high-impact events
         </span>
       ) : (
@@ -315,15 +315,15 @@ function InlineEventsStrip() {
                 className="flex items-baseline gap-1"
                 style={{ opacity: past && !ev.actual ? 0.45 : 1 }}
               >
-                <span className="font-mono text-[11px]" style={{ color }}>
+                <span className="font-mono text-[22px]" style={{ color }}>
                   {ev.time_il}
                 </span>
-                <span className="font-sans text-[11px]" style={{ color }}>
+                <span className="font-sans text-[22px]" style={{ color }}>
                   {ev.title}
                 </span>
                 {ev.actual && (
                   <span
-                    className="font-mono text-[10px] font-semibold"
+                    className="font-mono text-[20px] font-semibold"
                     style={{ color: 'var(--color-bullish)' }}
                   >
                     {ev.actual}
@@ -331,7 +331,7 @@ function InlineEventsStrip() {
                 )}
                 {soon && !ev.actual && (
                   <span
-                    className="font-mono text-[9px] px-1 rounded-sm"
+                    className="font-mono text-[18px] px-1 rounded-sm"
                     style={{
                       backgroundColor: 'rgba(245,158,11,0.15)',
                       color: 'var(--color-warning)',
