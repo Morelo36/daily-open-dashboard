@@ -16,6 +16,16 @@ function fullTime(ts: number): string {
   return new Date(ts * 1000).toLocaleString();
 }
 
+function signalTime(ts: number): string {
+  // Display in Israel time (UTC+3 / IDT)
+  return new Date(ts * 1000).toLocaleTimeString('en-IL', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Jerusalem',
+    hour12: false,
+  });
+}
+
 function formatPrice(p: number): string {
   if (p >= 1000) return p.toLocaleString('en-US', { maximumFractionDigits: 2 });
   if (p >= 1) return p.toFixed(4);
@@ -519,6 +529,7 @@ export default function LiveAlertsTable({ livePrices, onSymbolsChange }: Props) 
                 <SortableHeader label="Scanner"  col="scanner"     sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="TF"       col="timeframe"   sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Dir"      col="direction"   sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                <PlainHeader label="Signal Time" />
                 <SortableHeader label="Price"    col="alert_price" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="% Move"   col="pctMove"     sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                 <SortableHeader label="Tier"     col="tier"        sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
@@ -589,6 +600,13 @@ export default function LiveAlertsTable({ livePrices, onSymbolsChange }: Props) 
 
                     {/* Direction */}
                     <td className="px-2 py-2"><DirectionBadge dir={alert.direction} /></td>
+
+                    {/* Signal Appearance Time */}
+                    <td className="px-2 py-2 whitespace-nowrap" title={fullTime(alert.ts)}>
+                      <span className="font-mono text-[11px]" style={{ color: 'var(--color-text-primary)' }}>
+                        {signalTime(alert.ts)}
+                      </span>
+                    </td>
 
                     {/* Alert price */}
                     <td className="px-2 py-2 whitespace-nowrap">
