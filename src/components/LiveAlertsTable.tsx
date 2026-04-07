@@ -78,8 +78,8 @@ function ScannerBadge({ scanner }: { scanner: string }) {
     SHORTS: 'bg-[#2d1a1a] text-[#EF4444] border-[#5a2020]',
     VOLUME: 'bg-[#1a2030] text-[#3B82F6] border-[#1e3a5f]',
     SWEEP:  'bg-[#1a2a1a] text-[#22C55E] border-[#1a4a1a]',
-    HL:     'bg-[#2a2010] text-[#F59E0B] border-[#5a4010]',
-    BLH:    'bg-[#2a1a2a] text-[#A855F7] border-[#5a2060]',
+    HL:     'bg-[#1a2a1a] text-[#22C55E] border-[#1a4a1a]',
+    BLH:    'bg-[#2d1a1a] text-[#EF4444] border-[#5a2020]',
   };
   const labels: Record<string, string> = { SHORTS: 'SHORT', VOLUME: 'VOL', SWEEP: 'SWEEP', HL: 'H.LOW', BLH: 'B.LOW' };
   return (
