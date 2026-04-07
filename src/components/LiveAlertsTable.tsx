@@ -153,11 +153,11 @@ function Tags({ alert }: { alert: ScannerAlert }) {
   if (typeof extra.spike_vs_median === 'number') tags.push(`${(extra.spike_vs_median as number).toFixed(0)}×`);
   if (typeof extra.sweep_depth_pct === 'number') tags.push(`depth ${(extra.sweep_depth_pct as number).toFixed(2)}%`);
   if (typeof extra.early_window === 'number' && (extra.early_window as number) > 1) tags.push(`w${extra.early_window}`);
-  if (!tags.length) return <span className="text-[#9090A0] text-[10px]">—</span>;
+  if (!tags.length) return <span className="text-[#F0F0F5] text-[10px]">—</span>;
   return (
     <div className="flex flex-wrap gap-1">
       {tags.map((t, i) => (
-        <span key={i} className="px-1 py-0 rounded text-[9px] bg-[#18181F] text-[#9090A0] border border-[#242430] whitespace-nowrap">
+        <span key={i} className="px-1 py-0 rounded text-[9px] bg-[#18181F] text-[#F0F0F5] border border-[#242430] whitespace-nowrap">
           {t}
         </span>
       ))}
@@ -567,7 +567,7 @@ export default function LiveAlertsTable({ livePrices, onSymbolsChange }: Props) 
 
                     {/* Time */}
                     <td className="px-2 py-2 whitespace-nowrap" title={fullTime(alert.ts)}>
-                      <span className="text-[11px] font-mono" style={{ color: 'var(--color-text-secondary)' }}>
+                      <span className="text-[11px] font-mono" style={{ color: 'var(--color-text-primary)' }}>
                         {relativeTime(alert.ts)}
                       </span>
                     </td>
@@ -593,7 +593,7 @@ export default function LiveAlertsTable({ livePrices, onSymbolsChange }: Props) 
 
                     {/* Timeframe */}
                     <td className="px-2 py-2">
-                      <span className="text-[10px] font-mono" style={{ color: 'var(--color-text-secondary)' }}>
+                      <span className="text-[10px] font-mono" style={{ color: 'var(--color-text-primary)' }}>
                         {alert.timeframe}
                       </span>
                     </td>
@@ -626,8 +626,8 @@ export default function LiveAlertsTable({ livePrices, onSymbolsChange }: Props) 
                     {/* Score */}
                     <td className="px-2 py-2">
                       {alert.score != null
-                        ? <span className="font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>{alert.score.toFixed(0)}</span>
-                        : <span style={{ color: 'var(--color-text-secondary)' }} className="text-[10px]">—</span>}
+                        ? <span className="font-mono text-[11px]" style={{ color: 'var(--color-text-primary)' }}>{alert.score.toFixed(0)}</span>
+                        : <span style={{ color: 'var(--color-text-primary)' }} className="text-[10px]">—</span>}
                     </td>
 
                     {/* Tags */}

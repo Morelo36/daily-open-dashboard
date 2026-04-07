@@ -49,7 +49,7 @@ export default function TopBar({ coins, onAddCoin, onRemoveCoin, onRefresh, last
       <div className="flex items-center gap-3 shrink-0">
         <img src="/neo-logo.png" alt="NEO" className="h-8 w-auto object-contain" />
         <div className="flex items-center gap-1.5">
-          <span className="font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+          <span className="font-mono text-[10px]" style={{ color: 'var(--color-text-primary)' }}>
             Updated {updatedAgo}
           </span>
           {dataStatus === 'live' && (
@@ -64,7 +64,7 @@ export default function TopBar({ coins, onAddCoin, onRemoveCoin, onRefresh, last
 
         {/* Date + time */}
         <div className="flex flex-col">
-          <span className="font-mono text-[11px]" style={{ color: 'var(--color-text-secondary)' }}>
+          <span className="font-mono text-[11px]" style={{ color: 'var(--color-text-primary)' }}>
             {dateStr}
           </span>
           <span className="font-mono text-[12px] font-medium" style={{ color: 'var(--color-text-primary)' }}>
