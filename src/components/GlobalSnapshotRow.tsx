@@ -137,103 +137,46 @@ function arcPath(cx: number, cy: number, r: number, startDeg: number, endDeg: nu
 }
 
 function FearGreedGauge({ value, label: _label }: { value: number; label: string }) {
-  const cx = 60, cy = 58, r = 44;
+  const cx = 56, cy = 52, r = 40;
   const color = fgColor(value);
   const displayLabel = fgLabel(value);
 
-  // Needle angle: 0 = leftmost (0 score), 180 = rightmost (100 score)
   const needleDeg = (value / 100) * 180;
   const needleRad = ((needleDeg - 180) * Math.PI) / 180;
-  const needleLen = 36;
+  const needleLen = 32;
   const nx = cx + needleLen * Math.cos(needleRad);
   const ny = cy + needleLen * Math.sin(needleRad);
 
   return (
-    <div className="flex flex-col items-center justify-center px-4 py-1 shrink-0" style={{ minWidth: '130px' }}>
-      <span
-        className="text-[10px] uppercase tracking-widest font-sans mb-0.5"
-        style={{ color: 'var(--color-text-muted)' }}
-      >
-        Fear &amp; Greed
-      </span>
-
-      <svg width="120" height="66" viewBox="0 0 120 66" style={{ overflow: 'visible' }}>
-        {/* Background track */}
-        <path
-          d={arcPath(cx, cy, r, 0, 180)}
-          fill="none"
-          stroke="var(--color-surface-border)"
-          strokeWidth="7"
-          strokeLinecap="round"
-        />
-        {/* Zone: Fear (0–39) → red */}
-        <path
-          d={arcPath(cx, cy, r, 0, 70)}
-          fill="none"
-          stroke="#EF444466"
-          strokeWidth="7"
-        />
-        {/* Zone: Neutral (40–59) → amber */}
-        <path
-          d={arcPath(cx, cy, r, 70, 107)}
-          fill="none"
-          stroke="#F59E0B66"
-          strokeWidth="7"
-        />
-        {/* Zone: Greed (60–100) → green */}
-        <path
-          d={arcPath(cx, cy, r, 107, 180)}
-          fill="none"
-          stroke="#22C55E66"
-          strokeWidth="7"
-        />
-        {/* Active fill up to current value */}
-        <path
-          d={arcPath(cx, cy, r, 0, needleDeg)}
-          fill="none"
-          stroke={color}
-          strokeWidth="7"
-          strokeLinecap="round"
-          opacity="0.85"
-        />
-        {/* Needle */}
-        <line
-          x1={cx} y1={cy}
-          x2={nx} y2={ny}
-          stroke={color}
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        {/* Center dot */}
+    <div className="flex items-center gap-3 px-5 py-2.5 shrink-0">
+      {/* Arc gauge — no number inside */}
+      <svg width="112" height="60" viewBox="0 0 112 60" style={{ overflow: 'visible' }}>
+        <path d={arcPath(cx, cy, r, 0, 180)} fill="none" stroke="var(--color-surface-border)" strokeWidth="7" strokeLinecap="round" />
+        <path d={arcPath(cx, cy, r, 0, 70)}  fill="none" stroke="#EF444466" strokeWidth="7" />
+        <path d={arcPath(cx, cy, r, 70, 107)} fill="none" stroke="#F59E0B66" strokeWidth="7" />
+        <path d={arcPath(cx, cy, r, 107, 180)} fill="none" stroke="#22C55E66" strokeWidth="7" />
+        <path d={arcPath(cx, cy, r, 0, needleDeg)} fill="none" stroke={color} strokeWidth="7" strokeLinecap="round" opacity="0.85" />
+        <line x1={cx} y1={cy} x2={nx} y2={ny} stroke={color} strokeWidth="2" strokeLinecap="round" />
         <circle cx={cx} cy={cy} r="3" fill={color} />
-        {/* Value text */}
-        <text
-          x={cx} y={cy + 14}
-          textAnchor="middle"
-          fill="var(--color-text-primary)"
-          fontSize="13"
-          fontFamily="JetBrains Mono, monospace"
-          fontWeight="600"
-        >
-          {value}
-        </text>
-        <text
-          x={cx} y={cy + 24}
-          textAnchor="middle"
-          fill="var(--color-text-muted)"
-          fontSize="8"
-          fontFamily="JetBrains Mono, monospace"
-        >
-          / 100
-        </text>
       </svg>
 
-      <span
-        className="text-[9px] font-semibold uppercase tracking-wider -mt-1"
-        style={{ color }}
-      >
-        {displayLabel}
-      </span>
+      {/* Value + label to the right of the arc */}
+      <div className="flex flex-col gap-0.5">
+        <span className="text-[10px] uppercase tracking-widest font-sans" style={{ color: 'var(--color-text-muted)' }}>
+          Fear &amp; Greed
+        </span>
+        <div className="flex items-baseline gap-1">
+          <span className="font-mono text-[22px] font-bold leading-none" style={{ color }}>
+            {value}
+          </span>
+          <span className="font-mono text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
+            / 100
+          </span>
+        </div>
+        <span className="font-mono text-[10px] font-semibold uppercase tracking-wide" style={{ color }}>
+          {displayLabel}
+        </span>
+      </div>
     </div>
   );
 }
